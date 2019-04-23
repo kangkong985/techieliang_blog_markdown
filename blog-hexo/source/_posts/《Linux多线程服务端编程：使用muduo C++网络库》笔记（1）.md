@@ -1,4 +1,3 @@
----
 title: " 《Linux多线程服务端编程：使用muduo C++网络库》笔记（1）\t\t"
 tags:
   - 笔记
@@ -9,7 +8,6 @@ categories:
   - 后端
 date: 2019-02-23 23:04:32
 ---
-
 以往完全没学过服务端、os等相关知识，甚至于C++语法还有好多没涉及到过，所以在阅读本书过程中遇到了好多全新的知识，一遍阅读理解有限，先记录一下。 相关知识了解过少，下面分类可能不对，主要是记录新遇到的知识点、学过但遗忘的知识点。
 
 C++/C++11
@@ -19,14 +17,21 @@ C++/C++11
 
 首先这不是函数，也不是return一类的操作符关键字，是一个特殊的宏，会在编译期求解
 
-> 注意是编译期求解所以内部表达式编译后会成为最后值，运行时不会执行内部代码 int a=0; sizeof(a=1); cout<<a;//此处是0
+> 注意是编译期求解所以内部表达式编译后会成为最后值，运行时不会执行内部代码 
 
-两种用法，sizeof(typename/object)?? sizeof object?? 即类型名必须用括号，对象名可不用括号
+`int a=0; sizeof(a=1); cout<<a;//此处是0`
+
+两种用法，`sizeof(typename/object) sizeof object` 即类型名必须用括号，对象名可不用括号
 
 ### std::function/std::bind
 
-std::function仿函数，将函数指针封装成了模板类。 std::function<int(int ,int)> （）外为返回值，内为多个参数类型 bind可实现对函数的绑定，支持不同参数类型：[C++11 中function和bind以及lambda 表达式的用法](https://www.cnblogs.com/leijiangtao/p/4200969.html)
+std::function仿函数，将函数指针封装成了模板类。 
 
+std::function<int(int ,int)> （）外为返回值，内为多个参数类型 
+
+bind可实现对函数的绑定，支持不同参数类型：[C++11 中function和bind以及lambda 表达式的用法](https://www.cnblogs.com/leijiangtao/p/4200969.html)
+
+```
 #include <iostream>
 using namespace std;
 class A {
@@ -73,14 +78,20 @@ int main(int argc, const char * argv\[\]) {
     fc(10,20);//print:10 20
     return 0;
 }
-
+```
 ### emplace\_back/emplace\_front/emplace
 
 emplace\_back能就地通过参数构造对象，不需要拷贝或者移动内存，相比push\_back能更好地避免内存的拷贝与移动，使容器插入元素的性能得到进一步提升。在大多数情况下应该优先使用emplace\_back来代替push\_back。
 
 ### assert/assert_static
 
-三者差异：运行时、静态 assert_static在编译期间进行判定 所有断言仅用作判断，不要在内部添加可改变全局/局部状态的操作或函数 release编译不会屏蔽assert，除非主动声明NDEBUG宏
+三者差异：运行时、静态 
+
+assert_static在编译期间进行判定 
+
+所有断言仅用作判断，不要在内部添加可改变全局/局部状态的操作或函数 
+
+release编译不会屏蔽assert，除非主动声明NDEBUG宏
 
 ### std::move/std::forward
 
@@ -101,11 +112,19 @@ IO
 *   阻塞方式下读取或者写入函数将一直等待，
 *   非阻塞方式下，读取或者写入函数会立即返回一个状态值
 
-一般来说I/O模型可以分为：同步阻塞，同步非阻塞，IO多路复用，信号驱动，异步IO（**只有同步才有阻塞、非阻塞之分**） IO多路复用、信号驱动也是同步的，在IO操作上还是有序的，但表现出一定异步的性质。 同步阻塞，同步非阻塞，IO多路复用，信号驱动，实质都有一定阻塞：内核拷贝数据到进程数据空间。 而异步都是非阻塞的（AIO、IOCP），只有用户线程在操作IO的时候根本不去考虑IO的执行全部都交给CPU去完成，而自己只等待一个完成信号的时候，才是真正的异步IO
+一般来说I/O模型可以分为：同步阻塞，同步非阻塞，IO多路复用，信号驱动，异步IO（**只有同步才有阻塞、非阻塞之分**） 
+
+IO多路复用、信号驱动也是同步的，在IO操作上还是有序的，但表现出一定异步的性质。
+
+同步阻塞，同步非阻塞，IO多路复用，信号驱动，实质都有一定阻塞：内核拷贝数据到进程数据空间。 
+
+而异步都是非阻塞的（AIO、IOCP），只有用户线程在操作IO的时候根本不去考虑IO的执行全部都交给CPU去完成，而自己只等待一个完成信号的时候，才是真正的异步IO
 
 ### select/poll/epoll
 
-https://www.cnblogs.com/zhaodahai/p/6831456.html select本质上是通过设置或者检查存放fd标志位的数据结构来进行下一步处理。
+https://www.cnblogs.com/zhaodahai/p/6831456.html 
+
+select本质上是通过设置或者检查存放fd标志位的数据结构来进行下一步处理。
 
 1.  单个进程可监视的fd数量被限制，即能监听端口的大小有限。
 2.  对socket进行扫描时是线性扫描，即采用轮询的方法，效率较低
@@ -129,11 +148,15 @@ epoll有EPOLLLT和EPOLLET两种触发模式，LT是默认的模式，条件触�
 
 ### 边缘触发(Edge Trigger)/条件触发(Level Trigger)
 
-条件触发(Level Trigger)下，只要这个fd还有数据可读，每次 epoll_wait都会返回它的事件，提醒用户程序去操作 在边缘触发模式中，它只会提示一次，直到下次再有数据流入之前都不会再提示了，无 论fd中是否还有数据可读。
+条件触发(Level Trigger)下，只要这个fd还有数据可读，每次 epoll_wait都会返回它的事件，提醒用户程序去操作 
+
+在边缘触发模式中，它只会提示一次，直到下次再有数据流入之前都不会再提示了，无 论fd中是否还有数据可读。
 
 ### Reactor模式/Proactor模式
 
-事件处理模型，[IO设计模式：Reactor和Proactor对比](https://www.cnblogs.com/me115/p/4452801.html) Reactor（反应器）模式用于同步I/O，而Proactor运用于异步I/O操作
+事件处理模型，[IO设计模式：Reactor和Proactor对比](https://www.cnblogs.com/me115/p/4452801.html) 
+
+Reactor（反应器）模式用于同步I/O，而Proactor运用于异步I/O操作
 
 分布式系统
 -----
