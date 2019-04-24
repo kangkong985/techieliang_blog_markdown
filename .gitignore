@@ -2,7 +2,6 @@
 Thumbs.db
 db.json
 *.log
-blog-hexo/node_modules/
 blog-hexo/public/
 blog-hexo/.deploy*/
 blog-hexo/themes/next/.git/
